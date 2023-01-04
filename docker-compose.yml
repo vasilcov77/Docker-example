@@ -1,0 +1,27 @@
+version: '3'
+
+services:
+
+  webserver:
+    image: nginx:1.23.3
+    container_name: nginx
+    volumes:
+      - ./docker/nginx/default.conf:/etc/nginx/conf.d/default.conf
+      - ./:/var/www/${PROJECT_NAME}
+      - ./logs/nginx:/var/log/nginx
+    ports:
+      - '80:80'
+      - '443:443'
+    depends_on:
+      - php
+    links:
+      - php
+
+  php:
+    build:
+      context: docker/php
+    container_name: php-fpm
+    volumes:
+      - ./:/var/www/${PROJECT_NAME}
+    environment:
+      - PHP_IDE_CONFIG=serverName=${PROJECT_NAME}
