@@ -1,3 +1,5 @@
 .idea
 logs
 .env
+/docker/db/mysql/
+/docker/db/mysql-files/

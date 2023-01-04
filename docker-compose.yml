@@ -1,7 +1,8 @@
 version: '3'
 
 services:
-  webserver:
+
+  nginx:
     image: nginx:1.23.3
     container_name: nginx
     volumes:
@@ -11,7 +12,7 @@ services:
     ports:
       - '80:80'
       - '443:443'
-    links:
+    depends_on:
       - php
 
   php:
@@ -20,11 +21,39 @@ services:
     container_name: php-fpm
     volumes:
       - ./:/var/www/${PROJECT_NAME}
+      - ./logs/php:/var/log/php
     environment:
       - PHP_IDE_CONFIG=serverName=${PROJECT_NAME}
+
+  mysql:
+    build:
+      context: docker/db
+    container_name: mysql
+    ports:
+      - "3306:3306"
+    volumes:
+      - ./logs/mysql:/var/log/mysql
+      - ./docker/db/mysql/:/var/lib/mysql
+      - ./docker/db/mysql-files:/var/lib/mysql-files
+    command: mysqld --sql-mode=""
+    environment:
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
 
   memcached:
     image: memcached:1.6.17
     container_name: memcached
     ports:
       - '11211:11211'
+
+  adminer:
+    image: dockette/adminer:full
+    container_name: adminer
+    links:
+      - mysql:mysql
+    ports:
+      - '8080:80'
+    environment:
+      UPLOAD: 1024M # upload_max_filesize, post_max_size
