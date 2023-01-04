@@ -33,6 +33,8 @@ ADD php.ini /usr/local/etc/php/conf.d/40-custom.ini
 
 RUN usermod -u 1000 www-data
 
-WORKDIR '/var/www'
+WORKDIR "/var/www"
 
 EXPOSE 9000
+
+CMD ["php-fpm"]

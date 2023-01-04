@@ -1,7 +1,6 @@
 version: '3'
 
 services:
-
   webserver:
     image: nginx:1.23.3
     container_name: nginx
@@ -12,8 +11,6 @@ services:
     ports:
       - '80:80'
       - '443:443'
-    depends_on:
-      - php
     links:
       - php
 
@@ -25,3 +22,9 @@ services:
       - ./:/var/www/${PROJECT_NAME}
     environment:
       - PHP_IDE_CONFIG=serverName=${PROJECT_NAME}
+
+  memcached:
+    image: memcached:1.6.17
+    container_name: memcached
+    ports:
+      - '11211:11211'
