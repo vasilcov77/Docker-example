@@ -4,9 +4,10 @@ RUN apt update \
     && apt -y --no-install-recommends install \
     curl \
     wget \
-    git \
     unzip \
     rsync \
+    openssh-client \
+    git \
     php7.4-memcached \
     php7.4-memcache \
     php7.4-mbstring \
