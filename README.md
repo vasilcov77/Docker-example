@@ -13,8 +13,12 @@
 
 Остановка контейнеров.
 
-`docker-compose rm`
+`docker-compose stop`
 
 Удаление контейнеров.
 
 `docker-compose rm`
+
+Удаление образов.
+
+`docker image prune -a`

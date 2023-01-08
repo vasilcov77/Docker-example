@@ -3,50 +3,74 @@ version: '3'
 services:
 
   nginx:
-    image: nginx:1.23.3
+    build:
+      context: docker/nginx
     container_name: nginx
     volumes:
       - ./docker/nginx/default.conf:/etc/nginx/conf.d/default.conf
-      - ./:/var/www/${PROJECT_NAME}
+      - ./public:/var/www/${DOMAIN}
       - ./logs/nginx:/var/log/nginx
     ports:
       - '80:80'
-      - '443:443'
     depends_on:
-      - php
+      - php-fpm
+    networks:
+      bitrix:
+        ipv4_address: ${NGINX_INTERFACE}
 
-  php:
+  php-fpm:
     build:
-      context: docker/php
+      context: docker/php-fpm
     container_name: php-fpm
     volumes:
-      - ./:/var/www/${PROJECT_NAME}
-      - ./logs/php:/var/log/php
+      - ./public:/var/www/${DOMAIN}
+      - ./logs/php:/var/log/php/
     environment:
-      - PHP_IDE_CONFIG=serverName=${PROJECT_NAME}
+      - PHP_IDE_CONFIG=serverName=${DOMAIN}
+    depends_on:
+      - mysql
+    networks:
+      - bitrix
+    extra_hosts:
+      - "${DOMAIN}:${NGINX_INTERFACE}"
 
   mysql:
     build:
-      context: docker/db
+      context: docker/mysql
     container_name: mysql
     ports:
       - "3306:3306"
     volumes:
       - ./logs/mysql:/var/log/mysql
-      - ./docker/db/mysql/:/var/lib/mysql
-      - ./docker/db/mysql-files:/var/lib/mysql-files
-    command: mysqld --sql-mode=""
+      - ./storage/mysql/:/var/lib/mysql
+      - ./storage/backup:/docker-entrypoint-initdb.d
     environment:
       MYSQL_DATABASE: ${MYSQL_DATABASE}
       MYSQL_USER: ${MYSQL_USER}
       MYSQL_PASSWORD: ${MYSQL_PASSWORD}
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+    networks:
+      - bitrix
 
   memcached:
-    image: memcached:1.6.17
-    container_name: memcached
+    build:
+      context: docker/memcached
+    volumes:
+      - ./storage/memcached:/var/lib/memcached
     ports:
-      - '11211:11211'
+      - "11211:11211"
+    depends_on:
+      - php-fpm
+    networks:
+      - bitrix
+
+  mailhog:
+    image: mailhog/mailhog
+    ports:
+      - "1025:1025"
+      - "8025:8025"
+    networks:
+      - bitrix
 
   adminer:
     image: dockette/adminer:full
@@ -55,5 +79,11 @@ services:
       - mysql:mysql
     ports:
       - '8080:80'
-    environment:
-      UPLOAD: 1024M # upload_max_filesize, post_max_size
+
+networks:
+  bitrix:
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+        - subnet: 10.100.0.0/24

@@ -1,5 +1,6 @@
-.idea
-logs
+.idea/
+public/*
+!public/.gitkeep
 .env
-/docker/db/mysql/
-/docker/db/mysql-files/
+storage/
+logs/
